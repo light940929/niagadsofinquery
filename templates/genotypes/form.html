@@ -1,0 +1,47 @@
+{{ define "content" }}
+
+  <div class="page-header">
+    <h2>
+      {{ .title }} {{ .genotype.Title }}
+      {{ if .genotype.Id }}
+        <form class="inline pull-right" action="/delete/genotypes/{{ .genotype.Id.Hex }}" method="POST">
+          <a href="javascript:void(0);" onclick="if (confirm('Are you sure you want to delete {{ .genotype.Title }}?')) document.forms[0].submit();" class="red">
+            <i class="fa fa-trash"></i>
+          </a>
+        </form>
+      {{ end }}
+    </h2>
+  </div>
+
+  <form action="/genotypes/{{ .genotype.Id.Hex }}" method="POST">
+
+    {{ if .genotype.Id }}
+      <input type="hidden" name="_id" value="{{ .genotype.Id.Hex }}">
+    {{ end }}
+
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" name="title" class="form-control" id="title" placeholder="Enter the title of the genotype" value="{{ .genotype.Title }}">
+    </div>
+
+    <div class="form-group">
+      <label for="chr">Chr</label>
+      <textarea name="chr" class="form-control" rows="3" placeholder="Enter genotype Chr">{{ .genotype.Chr  }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="coordinate">Coordinate</label>
+      <textarea name="coordinate" class="form-control" rows="3" placeholder="Enter genotype Coordinate">{{ .genotype.Coordinate  }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-default">Submit</button>
+
+    <div class="form-group">
+      <h3>
+      <label for="detail">JSON Details</label>
+      </h3>
+    </div>
+
+  </form>
+
+{{ end }}

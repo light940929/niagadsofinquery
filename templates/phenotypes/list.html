@@ -1,0 +1,19 @@
+{{ define "content" }}
+
+  <div class="page-header">
+    <h2>{{ .title }}</h2>
+  </div>
+
+  {{ $phenotypes := .phenotypes }}
+
+  <div class="list-group">
+  {{ range $phenotype := $phenotypes }}
+    <a href="/phenotypes/{{ $phenotype.Id.Hex }}" class="list-group-item">
+      <h4 class="list-group-item-heading">{{ $phenotype.Title }}</h4>
+      <p class="list-group-item-text">{{ $phenotype.FamilyID }}</p>
+      <p class="list-group-item-text">{{ $phenotype.IndividualID  }}</p>
+    </a>
+  {{ end }}
+  </div>
+
+{{ end }}

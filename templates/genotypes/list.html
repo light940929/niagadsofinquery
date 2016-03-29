@@ -1,0 +1,19 @@
+{{ define "content" }}
+
+  <div class="page-header">
+    <h2>{{ .title }}</h2>
+  </div>
+
+  {{ $genotypes := .genotypes }}
+
+  <div class="list-group">
+  {{ range $genotype := $genotypes }}
+    <a href="/genotypes/{{ $genotype.Id.Hex }}" class="list-group-item">
+      <h4 class="list-group-item-heading">{{ $genotype.Title }}</h4>
+      <p class="list-group-item-text">{{ $genotype.Chr }}</p>
+      <p class="list-group-item-text">{{ $genotype.Coordinate  }}</p>
+    </a>
+  {{ end }}
+  </div>
+
+{{ end }}

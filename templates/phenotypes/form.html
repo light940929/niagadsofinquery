@@ -1,0 +1,47 @@
+{{ define "content" }}
+
+  <div class="page-header">
+    <h2>
+      {{ .title }} {{ .phenotype.Title }}
+      {{ if .phenotype.Id }}
+        <form class="inline pull-right" action="/delete/phenotypes/{{ .phenotype.Id.Hex }}" method="POST">
+          <a href="javascript:void(0);" onclick="if (confirm('Are you sure you want to delete {{ .phenotype.Title }}?')) document.forms[0].submit();" class="red">
+            <i class="fa fa-trash"></i>
+          </a>
+        </form>
+      {{ end }}
+    </h2>
+  </div>
+
+  <form action="/phenotypes/{{ .phenotype.Id.Hex }}" method="POST">
+
+    {{ if .phenotype.Id }}
+      <input type="hidden" name="_id" value="{{ .phenotype.Id.Hex }}">
+    {{ end }}
+
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" name="title" class="form-control" id="title" placeholder="Enter the title of the phenotype" value="{{ .phenotype.Title }}">
+    </div>
+
+    <div class="form-group">
+      <label for="familyid">FamilyID</label>
+      <textarea name="familyid" class="form-control" rows="3" placeholder="Enter phenotype FamilyID">{{ .phenotype.FamilyID  }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="individualid">IndividualID</label>
+      <textarea name="individualid" class="form-control" rows="3" placeholder="Enter phenotype IndividualID">{{ .phenotype.IndividualID  }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-default">Submit</button>
+
+    <div class="form-group">
+      <h3>
+      <label for="detail">JSON Details</label>
+      </h3>
+    </div>
+
+  </form>
+
+{{ end }}
