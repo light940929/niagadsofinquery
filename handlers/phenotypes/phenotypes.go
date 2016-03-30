@@ -81,10 +81,11 @@ func List(c *gin.Context) {
 	if err != nil {
 		c.Error(err)
 	}
-	c.HTML(http.StatusOK, "phenotypes/list", gin.H{
-		"title":      "Phenotypes",
-		"phenotypes": phenotypes,
-	})
+	//get HTML
+	// c.HTML(http.StatusOK, "phenotypes/list", gin.H{
+	// 	"title":      "Phenotypes",
+	// 	"phenotypes": phenotypes,
+	// })
 
 	c.JSON(http.StatusOK, gin.H{
 		"phenotypes": phenotypes,

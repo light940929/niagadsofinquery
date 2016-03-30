@@ -78,10 +78,11 @@ func List(c *gin.Context) {
 	if err != nil {
 		c.Error(err)
 	}
-	c.HTML(http.StatusOK, "genotypes/list", gin.H{
-		"title":     "genotypes",
-		"genotypes": genotypes,
-	})
+	//HTML
+	// c.HTML(http.StatusOK, "genotypes/list", gin.H{
+	// 	"title":     "genotypes",
+	// 	"genotypes": genotypes,
+	// })
 
 	c.JSON(http.StatusOK, gin.H{
 		"genotypes": genotypes,
