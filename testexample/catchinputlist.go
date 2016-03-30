@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -75,6 +77,17 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(string(out))
+		url := "http://localhost:7000/genotypes"
+		var jsonStr = []byte(out)
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+		fmt.Println("response Status:", resp.Status)
 	}
 	//{"title":"cbd","family_id":"0","individual_id":"CBD0001"}
 	for individualrd.Scan() {
@@ -103,6 +116,17 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(string(out))
+		url := "http://localhost:7000/phenotypes"
+		var jsonStr = []byte(out)
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+		fmt.Println("response Status:", resp.Status)
 	}
 
 }
