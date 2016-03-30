@@ -12,16 +12,21 @@ import (
 //type A string //check for id type
 
 type snplist struct {
-	VariantID string
+	Title      string `json:"title"`
+	Chr        string `json:"chr"`
+	VariantID  string `json:"variant_id"`
+	Coordinate string `json:"coordinate"`
 }
 
 type individualist struct {
-	FamilyID     string
-	IndividualID string
+	Title        string `json:"title"`
+	FamilyID     string `json:"family_id"`
+	IndividualID string `json:"individual_id"`
 }
 
 func main() {
-	snplistfile, err := os.Open("snpID.txt")
+	//snplistfile, err := os.Open("snpID.txt") only id
+	snplistfile, err := os.Open("snplist.txt")
 	individualistfile, err := os.Open("individualist.txt")
 	if err != nil {
 		fmt.Println(err)
@@ -33,17 +38,45 @@ func main() {
 	snprd.Split(bufio.ScanLines)
 	individualrd.Split(bufio.ScanLines)
 	//{"VariantID":"rs12185268"}
+	// for snprd.Scan() {
+	// 	line := snprd.Text()
+	// 	//fmt.Printf("%s\n", line)
+	// 	snplists := &snplist{line}
+	// 	out, err := json.Marshal(snplists)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	fmt.Println(string(out))
+	// }
+
+	//{"title":"cbd","chr":"17","variant_id":"rs12185268","coordinate":"12185268"}
 	for snprd.Scan() {
 		line := snprd.Text()
-		//fmt.Printf("%s\n", line)
-		snplists := &snplist{line}
+		regchr := regexp.MustCompile(`\d{1,2} ,`)
+		chr1 := regchr.FindString(line)
+		chr := strings.Trim(chr1, " ,")
+		//fmt.Printf("%q\n", chr)
+
+		regVariantID := regexp.MustCompile(`[[:lower:]]+\d+`)
+		variantID := regVariantID.FindString(line)
+		//fmt.Printf("%q\n", variantID)
+
+		regCoordinate := regexp.MustCompile(`\d{8}`) //^/d{8}
+		coordinate := regCoordinate.FindString(line)
+		//fmt.Printf("%q\n", coordinate)
+
+		snplists := &snplist{
+			Title:      "cbd",
+			Chr:        chr,
+			VariantID:  variantID,
+			Coordinate: coordinate}
 		out, err := json.Marshal(snplists)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(string(out))
 	}
-	//{"FamilyID":"0","IndividualID":"CBD0001"}
+	//{"title":"cbd","family_id":"0","individual_id":"CBD0001"}
 	for individualrd.Scan() {
 		line := individualrd.Text()
 		regfamilyID := regexp.MustCompile(`\d ,`)
@@ -62,6 +95,7 @@ func main() {
 		//fmt.Printf("%q\n", individualID)
 
 		individualists := &individualist{
+			Title:        "cbd",
 			FamilyID:     familyID,
 			IndividualID: individualID}
 		out, err := json.Marshal(individualists)

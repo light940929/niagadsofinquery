@@ -12,7 +12,7 @@ type Genotype struct {
 	Title      string        `json:"title" form:"title" binding:"required" bson:"title"`
 	Chr        string        `json:"chr" form:"chr" binding:"required" bson:"chr"`
 	Coordinate string        `json:"coordinate" form:"coordinate" binding:"required" bson:"coordinate"`
-	VariantID  int64         `json:"variant_id" form:"variantid" bson:"variant_id"`
+	VariantID  string        `json:"variant_id" form:"variantid" bson:"variant_id"`
 	Location   string        `json:"location" form:"location" bson:"location"`
 	Call       string        `json:"call" form:"call" bson:"call"`
 	// User      bson.ObjectId `json:"user"`
