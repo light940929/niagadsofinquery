@@ -5,9 +5,9 @@ import "gopkg.in/mgo.v2/bson"
 type SexChoice string
 
 const (
-	Male                = "m"
-	Female              = "f"
-	Other               = "o"
+	Male                = "1"
+	Female              = "2"
+	Other               = "unknown"
 	CollectionPhenotype = "phenotypes"
 )
 
