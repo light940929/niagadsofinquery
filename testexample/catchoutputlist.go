@@ -79,7 +79,7 @@ func main() {
 		}
 		fmt.Println(string(out))
 
-		url := "http://localhost:7000/genotypes"
+		url := "http://localhost:9000/api/genotypes"
 		var jsonStr = []byte(out)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 		req.Header.Set("Content-Type", "application/json")
@@ -121,7 +121,7 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(string(out))
-		url := "http://localhost:7000/phenotypes"
+		url := "http://localhost:9000/api/phenotypes"
 		var jsonStr = []byte(out)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 		req.Header.Set("Content-Type", "application/json")
