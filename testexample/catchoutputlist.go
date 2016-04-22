@@ -83,6 +83,7 @@ func main() {
 		var jsonStr = []byte(out)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNDMxNDl9.M1K4fiH-jKoT-flBbla79A4q4aSM9qVOp3Q7xMtVe_8")
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -125,6 +126,7 @@ func main() {
 		var jsonStr = []byte(out)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNDMxNDl9.M1K4fiH-jKoT-flBbla79A4q4aSM9qVOp3Q7xMtVe_8")
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
