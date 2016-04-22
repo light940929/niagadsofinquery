@@ -106,7 +106,7 @@ func main() {
 		// get user, it was set by the BasicAuth middleware
 		user := c.MustGet(gin.AuthUserKey).(string)
 		if secret, ok := secrets[user]; ok {
-			c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret, "token_URL": "/api/oauth2/token"})
+			c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret, "token_URL": "/api/oauth2/token/"})
 
 		} else {
 			c.JSON(http.StatusOK, gin.H{"user": user, "secret": "NO SECRET :("})
