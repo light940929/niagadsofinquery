@@ -12,7 +12,7 @@ import requests
 
 url_phenotypes = 'http://localhost:9000/api/phenotypes'
 url_genotypes = 'http://localhost:9000/api/genotypes'
-token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNjI0NTV9.-Roix0YvuPy9VHaWm9wE83yB7NiSunyVXsVlR74lu2Y'
+token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjIzMTMyODJ9.AG63RkbnOkAEy-Oua2KC72mKa6K9COzGiY2lYSW2UbY'
 headers = {'Authorization': '%s' % token}
 request_phenotypes = Request(url_phenotypes, headers=headers)
 request_genotypes = Request(url_genotypes, headers=headers)
