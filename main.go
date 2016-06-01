@@ -11,23 +11,25 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+	"log"
 	"os"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	jwt_lib "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/contrib/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/user/niagadsofinquery/db"
 	"github.com/user/niagadsofinquery/gin_html_render"
-	"github.com/user/niagadsofinquery/handlers/genotypes"
-	"github.com/user/niagadsofinquery/handlers/phenotypes"
 	"github.com/user/niagadsofinquery/middlewares"
+	"github.com/user/niagadsofinquery/models"
 )
 
 const (
 	// Port at which the server starts listening
-	Port = "7000"
+	Port       = "7000"
+	MysqlDBUrl = "@tcp(localhost:3306)/test?charset=utf8&parseTime=true" //user:password@tcp(ip:port)/database //root:
 )
 
 var (
@@ -36,8 +38,17 @@ var (
 
 var service *gin.Engine
 
-func init() {
-	db.Connect()
+func dbWare() gin.HandlerFunc {
+
+	db, err := db.NewDB(MysqlDBUrl)
+	if err != nil {
+		log.Panic(err)
+		fmt.Printf("Can't connect to mysql")
+	}
+	return func(c *gin.Context) {
+		c.Set("db", db)
+		c.Next()
+	}
 }
 
 func getEnv(name string, def string) string {
@@ -56,6 +67,288 @@ func setupMiddleware() {
 	}
 }
 
+func index(c *gin.Context) {
+	content := gin.H{"Hello": "World"}
+	c.JSON(200, content)
+}
+
+func Usertest(ctx *gin.Context) {
+	// user, err := models.AllUsers(ctx)
+	// if err != nil {
+	// 	ctx.JSON(404, gin.H{"error": err})
+	// 	return
+	// }
+	// ctx.JSON(200, gin.H{"users": user})
+
+	user, err := models.FindUser(ctx)
+	if err != nil {
+		log.Print("userlogin: ", err)
+		ctx.JSON(404, gin.H{"error": "error loging in"})
+		return
+	}
+	ctx.JSON(200, gin.H{"users": user})
+}
+
+func UserLogin(ctx *gin.Context) {
+	user, err := models.FindUser(ctx)
+	if err != nil {
+		log.Print("userlogin: ", err)
+		ctx.JSON(404, gin.H{"error": "error loging in"})
+		return
+	}
+	//log.Print("userpassword: ", user.Password)
+	//log.Print("userform: ", ctx.PostForm("password"))
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(ctx.PostForm("password")+"niagads")) != nil {
+		log.Print("userloginAuthorized: ", err)
+		log.Print("password: ", ctx.PostForm("password"))
+		ctx.JSON(401, gin.H{"error": "User not Authorized"})
+		return
+	}
+	token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
+	token.Claims["ID"] = user.Email
+	token.Claims["exp"] = time.Now().Add(time.Hour * 1).Unix() // expires in a hour
+	tokenString, err2 := token.SignedString([]byte(mysupersecretpassword))
+	if err2 != nil {
+		log.Print("tokenString: ", tokenString)
+		log.Print("err2: ", err2)
+		ctx.JSON(500, gin.H{"error": "Problem generating token"})
+	}
+	user.Password = ""
+	log.Print("time: ", user.UpdatedAt)
+	ctx.JSON(200, gin.H{"user": user, "token": tokenString})
+}
+
+func UserAdd(ctx *gin.Context) {
+	user, err := models.AddUser(ctx)
+	if err != nil {
+		log.Print("user: ", user)
+		log.Print("err: ", err)
+		ctx.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
+	token.Claims["ID"] = user.Email
+	token.Claims["exp"] = time.Now().Add(time.Hour * 1).Unix() // expires in a hour
+	tokenString, err2 := token.SignedString([]byte(mysupersecretpassword))
+	if err2 != nil {
+
+		ctx.JSON(500, gin.H{"error": "Problem generating token"})
+	}
+	user.Password = ""
+	ctx.JSON(200, gin.H{"user": user, "token": tokenString, "success": "New user added"})
+}
+
+func UserRemove(ctx *gin.Context) {
+	_, err := models.RemoveUser(ctx)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	ctx.JSON(200, gin.H{"success": "User removed"})
+}
+
+func DatasetAdd(c *gin.Context) {
+
+	dataset, err := models.CreateDataset(c)
+	if err != nil {
+		log.Print("dataset: ", dataset)
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": dataset})
+
+}
+func InquerysetAdd(c *gin.Context) {
+
+	inqueryset, err := models.CreateInqueryset(c)
+	if err != nil {
+		log.Print("inqueryset: ", inqueryset)
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": inqueryset})
+
+}
+
+func PhenotypeAdd(c *gin.Context) {
+
+	phenotype, err := models.CreatePhenotype(c)
+	if err != nil {
+		log.Print("phenotype: ", phenotype)
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": phenotype})
+
+}
+func GenotypeAdd(c *gin.Context) {
+
+	genotype, err := models.CreateGenotype(c)
+	if err != nil {
+		log.Print("genotype: ", genotype)
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": genotype})
+
+}
+
+func DatasetsGet(c *gin.Context) {
+	datasets, err := models.ListDatasets(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error", "message": err})
+		return
+	}
+	c.JSON(200, gin.H{"success": datasets})
+
+}
+func InquerysetsGet(c *gin.Context) {
+	inquerysets, err := models.ListInquerysets(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error", "message": err})
+		return
+	}
+	c.JSON(200, gin.H{"success": inquerysets})
+
+}
+func PhenotypesGet(c *gin.Context) {
+	phenotypes, err := models.ListPhenotypes(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error", "message": err})
+		return
+	}
+	c.JSON(200, gin.H{"success": phenotypes})
+
+}
+func GenotypesGet(c *gin.Context) {
+	genotypes, err := models.ListGenotypes(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error", "message": err})
+		return
+	}
+	c.JSON(200, gin.H{"success": genotypes})
+
+}
+
+func DatasetGet(c *gin.Context) {
+	dataset, err := models.GetDataset(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(200, gin.H{"success": dataset})
+
+}
+
+func InquerysetGet(c *gin.Context) {
+	inqueryset, err := models.GetInqueryset(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(200, gin.H{"success": inqueryset})
+
+}
+func PhenotypeGet(c *gin.Context) {
+	phenotype, err := models.GetPhenotype(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(200, gin.H{"success": phenotype})
+
+}
+func GenotypeGet(c *gin.Context) {
+	genotype, err := models.GetGenotype(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(200, gin.H{"success": genotype})
+
+}
+
+func DatasetUpdate(c *gin.Context) {
+	dataset, err := models.UpdateDataset(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": dataset})
+
+}
+
+func InquerysetUpdate(c *gin.Context) {
+	inqueryset, err := models.UpdateInqueryset(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": inqueryset})
+
+}
+
+func PhenotypeUpdate(c *gin.Context) {
+	phenotype, err := models.UpdatePhenotype(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": phenotype})
+
+}
+func GenotypeUpdate(c *gin.Context) {
+	genotype, err := models.UpdateGenotype(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": genotype})
+
+}
+
+func DatasetRemove(c *gin.Context) {
+	dataset, err := models.DeleteDataset(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	log.Print("datasetRemove", dataset)
+	c.JSON(200, gin.H{"success": "dataset removed"})
+
+}
+
+func InquerysetRemove(c *gin.Context) {
+	inqueryset, err := models.DeleteInqueryset(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	log.Print("inquerysetRemove", inqueryset)
+	c.JSON(200, gin.H{"success": "inqueryset removed"})
+
+}
+func PhenotypeRemove(c *gin.Context) {
+	phenotype, err := models.DeletePhenotype(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	log.Print("phenotypeRemove", phenotype)
+	c.JSON(200, gin.H{"success": "phenotype removed"})
+
+}
+func GenotypeRemove(c *gin.Context) {
+	genotype, err := models.DeleteGenotype(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	log.Print("genotypeRemove", genotype)
+	c.JSON(200, gin.H{"success": "genotype removed"})
+
+}
+
 func main() {
 
 	if os.Getenv("API_KEY") == "" {
@@ -64,24 +357,12 @@ func main() {
 
 	// Configure
 	router := gin.Default()
-
+	router.Use(dbWare())
+	fmt.Print(router.Use(dbWare()))
 	setupMiddleware()
 
 	// Do not print extra debugging information
 	gin.SetMode("release")
-
-	// simulate some private data
-	var secrets = gin.H{
-		"hannah":  gin.H{"email": "hanjl@upenn.edu", "phone": "2158986986"},
-		"niagads": gin.H{"email": "support@niagads.org", "phone": "2158983258"},
-	}
-
-	// Group using gin.BasicAuth() middleware
-	// gin.Accounts is a shortcut for map[string]string
-	authorized := router.Group("/admin", gin.BasicAuth(gin.Accounts{
-		"hannah":  "hanjenlin",
-		"niagads": "niagads2016",
-	}))
 
 	// Set html render options
 	htmlRender := GinHTMLRender.New()
@@ -91,79 +372,64 @@ func main() {
 	// htmlRender.Ext = ".html"               in default
 
 	// Tell gin to use our html render
-	router.HTMLRender = htmlRender.Create()
+	//router.HTMLRender = htmlRender.Create()
 
 	router.RedirectTrailingSlash = true
 	router.RedirectFixedPath = true
 
 	// Middlewares
-	router.Use(middlewares.Connect)
-	router.Use(middlewares.ErrorHandler)
+	//router.Use(middlewares.Connect)
+	//router.Use(middlewares.ErrorHandler)
 	//router.Use(middlewares.RequireAuth)
 
-	// URL: localhost:port/admin/secrets
-	authorized.GET("/secrets", func(c *gin.Context) {
-		// get user, it was set by the BasicAuth middleware
-		user := c.MustGet(gin.AuthUserKey).(string)
-		if secret, ok := secrets[user]; ok {
-			c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret, "token_URL": "/api/oauth2/token/"})
+	//login public routes
+	router.GET("/", index)
+	//router.GET("/users", Usertest)
+	//router.POST("/users", Usertest)
 
-		} else {
-			c.JSON(http.StatusOK, gin.H{"user": user, "secret": "NO SECRET :("})
-		}
-	})
-
-	// JWT TOKEN
-	public := router.Group("/api/oauth2/token")
-	public.GET("/", func(c *gin.Context) {
-		// Create the token
-		token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
-		// Set some claims
-		token.Claims["ID"] = "NIAGADS"
-		token.Claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
-		// Sign and get the complete encoded token as a string
-		tokenString, err := token.SignedString([]byte(mysupersecretpassword))
-		if err != nil {
-			c.JSON(500, gin.H{"message": "Could not generate token"})
-		}
-		c.JSON(200, gin.H{"token": tokenString})
-	})
+	router.POST("/login", UserLogin)
+	router.POST("/signup", UserAdd)
 
 	// JWT PRIVATE
-	private := router.Group("/api")
-	private.Use(jwt.Auth(mysupersecretpassword))
-
 	/*
 		Set this header in your request to get here.
 		Authorization: Bearer `token`
 	*/
 
+	private := router.Group("/api")
+	private.Use(jwt.Auth(mysupersecretpassword))
 	private.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "These are phenotypes & genotypes api."})
+		c.JSON(200, gin.H{"message": "Hello from private. These are phenotypes & genotypes APIs."})
 	})
+	private.DELETE("/users/:email", UserRemove)
 
-	// // Routes
-	// private.GET("/", func(c *gin.Context) {
-	// 	c.Redirect(http.StatusMovedPermanently, "/phenotypes")
-	// })
+	//datasets
+	private.GET("/datasets", DatasetsGet)
+	private.POST("/datasets", DatasetAdd)
+	private.GET("/datasets/:name", DatasetGet)
+	private.PUT("/datasets/:name", DatasetUpdate)
+	private.DELETE("/datasets/:name", DatasetRemove)
+
+	//inquerysets
+	private.GET("/inqueries", InquerysetsGet)
+	private.POST("/inqueries", InquerysetAdd)
+	private.GET("/inqueries/:name", InquerysetGet)
+	private.PUT("/inqueries/:name", InquerysetUpdate)
+	private.DELETE("/inqueries/:name", InquerysetRemove)
 
 	// phenotypes
-	private.GET("/newphenotypes", phenotypes.New)
-
-	private.GET("/phenotypes", phenotypes.List)
-	private.POST("/phenotypes", phenotypes.Create)
-	private.GET("/phenotypes/:_id", phenotypes.Get)
-	private.PUT("/phenotypes/:_id", phenotypes.Update)
-	private.DELETE("/phenotypes/:_id", phenotypes.Delete)
+	private.GET("/phenotypes", PhenotypesGet)
+	private.POST("/phenotypes", PhenotypeAdd)
+	private.GET("/phenotypes/:name", PhenotypeGet)
+	private.PUT("/phenotypes/:name", PhenotypeUpdate)
+	private.DELETE("/phenotypes/:name", PhenotypeRemove)
 
 	// genotypes
-	private.GET("/newgenotypes", genotypes.New)
-
-	private.GET("/genotypes", genotypes.List)
-	private.POST("/genotypes", genotypes.Create)
-	private.GET("/genotypes/:_id", genotypes.Get)
-	private.PUT("/genotypes/:_id", genotypes.Update)
-	private.DELETE("/genotypes/:_id", genotypes.Delete)
+	private.GET("/genotypes", GenotypesGet)
+	private.POST("/genotypes", GenotypeAdd)
+	private.GET("/genotypes/:name", GenotypeGet)
+	private.PUT("/genotypes/:name", GenotypeUpdate)
+	private.DELETE("/genotypes/:name", GenotypeRemove)
 
 	// Start listening
 	port := Port
