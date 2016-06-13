@@ -14,6 +14,10 @@ go get && go install && PORT=7000 DEBUG=* gin -p 9000 -a 7000 -i run
 
 ```
 
+###Header
+Content-Type  application/json
+Authorization Bearer {TOKEN}
+
 ###Request
 --------
 <table>
@@ -63,7 +67,7 @@ go get && go install && PORT=7000 DEBUG=* gin -p 9000 -a 7000 -i run
  <tr>
   <td>/api/phenotypes/:name</td>
   <td>DELETE</td>
-  <td>id</td>
+  <td>name</td>
   <td>Delete a Single phenotype</td>
  </tr>
  <tr>
@@ -94,7 +98,7 @@ go get && go install && PORT=7000 DEBUG=* gin -p 9000 -a 7000 -i run
  <tr>
   <td>/api/genotypes/:name</td>
   <td>DELETE</td>
-  <td>id</td>
+  <td>name</td>
   <td>Delete a Single genotype</td>
  </tr>
  <tr>
@@ -125,7 +129,7 @@ go get && go install && PORT=7000 DEBUG=* gin -p 9000 -a 7000 -i run
  <tr>
   <td>/api/inqueries/:name</td>
   <td>DELETE</td>
-  <td>id</td>
+  <td>name</td>
   <td>Delete a Single inquery</td>
  </tr>
 
@@ -158,6 +162,6 @@ go get && go install && PORT=7000 DEBUG=* gin -p 9000 -a 7000 -i run
  <tr>
   <td>/api/datasets/:name</td>
   <td>DELETE</td>
-  <td>id</td>
+  <td>name</td>
   <td>Delete a Single datasets</td>
  </tr>
