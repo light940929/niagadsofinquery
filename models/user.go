@@ -5,16 +5,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	CollectionUser = "users"
 )
 
 type User struct {
-	Id        int        `json:"id"`
-	Name      string     `json:"name"`
-	Email     string     `json:"email"`
-	Password  string     `json:"password"`
-	CreatedAt *time.Time `json:"created_at,omitempty`  //NullTime
+	Id        int        `json:"id",omitempty`
+	Name      string     `json:"name" `                //binding:"required"
+	Email     string     `json:"email" `               //binding:"required"
+	Password  string     `json:"password" `            //binding:"required"
+	CreatedAt *time.Time `json:"created_at,omitempty"` //NullTime
 	UpdatedAt *time.Time `json:"updated_at,omitempty"` //NullTime
 }
 
@@ -46,28 +51,48 @@ func AllUsers(ctx *gin.Context) ([]*User, error) {
 
 func FindUser(ctx *gin.Context) (*User, error) {
 	db := ctx.MustGet("db").(*sql.DB)
-	name := ctx.PostForm("name")
 	user := new(User)
-	err := db.QueryRow("SELECT * FROM users WHERE name=?;", name).Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := ctx.Bind(user)
 	if err != nil {
-		log.Print("findusers: ", err)
-		return nil, err
+		log.Print("err: ", err)
+		return user, nil
 	}
+	log.Print("bindjson: ", &user)
+	log.Print("testname: ", user.Name)
+	log.Print("testpassword: ", user.Password)
+
+	//err := db.QueryRow("SELECT * FROM users WHERE name=?;", name).Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	errjson := db.QueryRow("SELECT * FROM users WHERE name=?;", user.Name).Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	if errjson != nil {
+		log.Print("findusersjson: ", errjson)
+		return nil, errjson
+	}
+
 	return user, nil
 }
 
 func AddUser(ctx *gin.Context) (*User, error) {
 	db := ctx.MustGet("db").(*sql.DB)
 	user := new(User)
-	user.Name = ctx.PostForm("name")
-	user.Email = ctx.PostForm("email")
+	err := ctx.Bind(user)
+	if err != nil {
+		log.Print("err: ", err)
+		return user, nil
+	}
+
+	log.Print("bindjson: ", &user)
+	name := ctx.PostForm("name")
+	email := ctx.PostForm("email")
 	b, err := bcrypt.GenerateFromPassword([]byte(ctx.PostForm("password")+"niagads"), bcrypt.DefaultCost)
-	//n := bytes.IndexByte(b, 0)
-	user.Password = string(b) //b[:n]
+	password := string(b) //b[:n]
+	log.Print("passwordb: ", password)
+	log.Print("user: ", user)
 	//err = db.QueryRow("INSERT INTO users(name,email,password) VALUES(?, ?, ?);", &user.Name, &user.Email, &user.Password).Scan(&user.Id)
 	stmt, err := db.Prepare("INSERT INTO users(name,email,password) VALUES(?, ?, ?);")
 	defer stmt.Close()
-	stmt.Exec(&user.Name, &user.Email, &user.Password)
+	log.Print("username: ", name, "useremail: ", email, "userpassword: ", password)
+	//ctx.BindJSON(&user)
+	stmt.Exec(user.Name, user.Email, password)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +118,8 @@ CREATE TABLE `users` (
 	`name` char(50) NOT NULL,
 	`email` varchar(255) NOT NULL,
 	`password` char(200) NOT NULL,
-	`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL default 0,
+	`updated_at` TIMESTAMP ON UPDATE now(),
 	unique(`email`),
     PRIMARY KEY (`id`)
 );

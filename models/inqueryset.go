@@ -17,19 +17,27 @@ type Inqueryset struct {
 	InquerysetName string `json:"name"`
 	IndividualID   string `json:"individual_id"`
 	VariantID      string `json:"variant_id"`
+	DatasetID      string `json:"did"`
 }
 
 // Create a Inqueryset
 func CreateInqueryset(c *gin.Context) (*Inqueryset, error) {
 	db := c.MustGet("db").(*sql.DB)
 	inqueryset := new(Inqueryset)
-	inqueryset.InquerysetName = c.PostForm("name")
-	inqueryset.IndividualID = c.PostForm("individual_id")
-	inqueryset.VariantID = c.PostForm("variant_id")
+	err := c.Bind(inqueryset)
+	if err != nil {
+		log.Print("err: ", err)
+		return inqueryset, nil
+	}
+	inquerysetName := c.PostForm("name")
+	individualID := c.PostForm("individual_id")
+	variantID := c.PostForm("variant_id")
+	datasetID := c.PostForm("did")
 
-	stmt, err := db.Prepare("INSERT INTO inquerysets(name,individual_id,variant_id) VALUES(?, ?, ?);")
+	stmt, err := db.Prepare("INSERT INTO inquerysets(name,individual_id,variant_id,did) VALUES(?, ?, ?, ?);")
 	defer stmt.Close()
-	stmt.Exec(&inqueryset.InquerysetName, &inqueryset.IndividualID, &inqueryset.VariantID)
+	log.Print("inquerysetName:", inquerysetName, "individualID:", individualID, "variantID:", variantID, "datasetID:", datasetID)
+	stmt.Exec(inqueryset.InquerysetName, inqueryset.IndividualID, inqueryset.VariantID, inqueryset.DatasetID)
 	if err != nil {
 		log.Print("createInqueryseterr: ", err)
 		log.Print("createInqueryset: ", stmt)
@@ -43,9 +51,10 @@ func CreateInqueryset(c *gin.Context) (*Inqueryset, error) {
 func GetInqueryset(c *gin.Context) (*Inqueryset, error) {
 
 	db := c.MustGet("db").(*sql.DB)
-	name := c.PostForm("name")
 	inqueryset := new(Inqueryset)
-	err := db.QueryRow("SELECT * FROM inquerysets WHERE name=?;", name).Scan(&inqueryset.Id, &inqueryset.InquerysetName, &inqueryset.IndividualID, &inqueryset.VariantID)
+	name := c.Param("name")
+	log.Print("name", name)
+	err := db.QueryRow("SELECT * FROM inquerysets WHERE name=?;", name).Scan(&inqueryset.Id, &inqueryset.InquerysetName, &inqueryset.IndividualID, &inqueryset.VariantID, &inqueryset.DatasetID)
 	log.Print("getInqueryset: ", inqueryset)
 	if err != nil {
 		log.Print("getInqueryseterr: ", err)
@@ -69,7 +78,7 @@ func ListInquerysets(c *gin.Context) ([]*Inqueryset, error) {
 
 	for rows.Next() {
 		inqueryset := new(Inqueryset)
-		err := rows.Scan(&inqueryset.Id, &inqueryset.InquerysetName, &inqueryset.IndividualID, &inqueryset.VariantID)
+		err := rows.Scan(&inqueryset.Id, &inqueryset.InquerysetName, &inqueryset.IndividualID, &inqueryset.VariantID, &inqueryset.DatasetID)
 		if err != nil {
 			return nil, err
 		}
@@ -85,12 +94,19 @@ func ListInquerysets(c *gin.Context) ([]*Inqueryset, error) {
 func UpdateInqueryset(c *gin.Context) (*Inqueryset, error) {
 	db := c.MustGet("db").(*sql.DB)
 	inqueryset := new(Inqueryset)
-	inqueryset.InquerysetName = c.PostForm("name")
-	inqueryset.IndividualID = c.PostForm("individual_id")
-	inqueryset.VariantID = c.PostForm("variant_id")
-	stmt, err := db.Prepare("UPDATE inquerysets set individual_id=?, variant_id=? WHERE name=? ;")
+	err := c.Bind(inqueryset)
+	if err != nil {
+		log.Print("err: ", err)
+		return inqueryset, nil
+	}
+	inquerysetName := c.PostForm("name")
+	individualID := c.PostForm("individual_id")
+	variantID := c.PostForm("variant_id")
+	datasetID := c.PostForm("did")
+	stmt, err := db.Prepare("UPDATE inquerysets set individual_id=?, variant_id=?, did=?  WHERE name=? ;")
 	defer stmt.Close()
-	stmt.Exec(&inqueryset.IndividualID, &inqueryset.VariantID, &inqueryset.InquerysetName)
+	log.Print("inquerysetName:", inquerysetName, "individualID:", individualID, "variantID:", variantID, "datasetID:", datasetID)
+	stmt.Exec(inqueryset.IndividualID, inqueryset.VariantID, inqueryset.DatasetID, inqueryset.InquerysetName)
 
 	if err != nil {
 		log.Print("updaterr: ", err)
@@ -120,8 +136,10 @@ CREATE TABLE `inquerysets` (
 	`name` char(50) NOT NULL,
 	`individual_id` varchar(255) NOT NULL,
 	`variant_id` varchar(255) NOT NULL,
+	`did` BIGINT NOT NULL,
 	unique(`name`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+	FOREIGN KEY (`did`) REFERENCES datasets(`did`)
 );
 
 */

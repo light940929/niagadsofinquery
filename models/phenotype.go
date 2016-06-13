@@ -35,19 +35,25 @@ type Phenotype struct {
 func CreatePhenotype(c *gin.Context) (*Phenotype, error) {
 	db := c.MustGet("db").(*sql.DB)
 	phenotype := new(Phenotype)
-	phenotype.Name = c.PostForm("name")
-	phenotype.Sex = c.PostForm("sex")
-	phenotype.Birth = c.PostForm("birth")
-	phenotype.Ageonset = c.PostForm("age_on_set")
-	phenotype.FamilyID = c.PostForm("family_id")
-	phenotype.IndividualID = c.PostForm("individual_id")
-	phenotype.PaternalID = c.PostForm("paternal_id")
-	phenotype.MaternalID = c.PostForm("maternal_id")
-	phenotype.AffectionStatus = c.PostForm("affection_status")
+	err := c.Bind(phenotype)
+	if err != nil {
+		log.Print("err: ", err)
+		return phenotype, nil
+	}
+	name := c.PostForm("name")
+	sex := c.PostForm("sex")
+	birth := c.PostForm("birth")
+	ageonset := c.PostForm("age_on_set")
+	familyID := c.PostForm("family_id")
+	individualID := c.PostForm("individual_id")
+	paternalID := c.PostForm("paternal_id")
+	maternalID := c.PostForm("maternal_id")
+	affectionStatus := c.PostForm("affection_status")
 
 	stmt, err := db.Prepare("INSERT INTO phenotypes(name,sex,birth,age_on_set,family_id,individual_id,paternal_id,maternal_id,affection_status) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);")
 	defer stmt.Close()
-	stmt.Exec(&phenotype.Name, &phenotype.Sex, &phenotype.Birth, &phenotype.Ageonset, &phenotype.FamilyID, &phenotype.IndividualID, &phenotype.PaternalID, &phenotype.MaternalID, &phenotype.AffectionStatus)
+	log.Print("name", name, "sex", sex, "birth", birth, "ageonset", ageonset, "familyID", familyID, "individualID", individualID, "paternalID", paternalID, "maternalID", maternalID, "affectionStatus", affectionStatus)
+	stmt.Exec(phenotype.Name, phenotype.Sex, phenotype.Birth, phenotype.Ageonset, phenotype.FamilyID, phenotype.IndividualID, phenotype.PaternalID, phenotype.MaternalID, phenotype.AffectionStatus)
 	if err != nil {
 		log.Print("createphenotypeerr: ", err)
 		log.Print("createphenotype: ", stmt)
@@ -61,8 +67,9 @@ func CreatePhenotype(c *gin.Context) (*Phenotype, error) {
 func GetPhenotype(c *gin.Context) (*Phenotype, error) {
 
 	db := c.MustGet("db").(*sql.DB)
-	name := c.PostForm("name")
 	phenotype := new(Phenotype)
+	name := c.Param("name")
+	log.Print("name", name)
 	err := db.QueryRow("SELECT * FROM phenotypes WHERE name=?;", name).Scan(&phenotype.Id, &phenotype.Name, &phenotype.Sex, &phenotype.Birth, &phenotype.Ageonset, &phenotype.FamilyID, &phenotype.IndividualID, &phenotype.PaternalID, &phenotype.MaternalID, &phenotype.AffectionStatus)
 	log.Print("getphenotype: ", phenotype)
 	if err != nil {
@@ -105,17 +112,23 @@ func ListPhenotypes(c *gin.Context) ([]*Phenotype, error) {
 func UpdatePhenotype(c *gin.Context) (*Phenotype, error) {
 	db := c.MustGet("db").(*sql.DB)
 	phenotype := new(Phenotype)
-	phenotype.Name = c.PostForm("name")
-	phenotype.Sex = c.PostForm("sex")
-	phenotype.Birth = c.PostForm("birth")
-	phenotype.Ageonset = c.PostForm("age_on_set")
-	phenotype.FamilyID = c.PostForm("family_id")
-	phenotype.IndividualID = c.PostForm("individual_id")
-	phenotype.PaternalID = c.PostForm("paternal_id")
-	phenotype.MaternalID = c.PostForm("maternal_id")
-	phenotype.AffectionStatus = c.PostForm("affection_status")
+	err := c.Bind(phenotype)
+	if err != nil {
+		log.Print("err: ", err)
+		return phenotype, nil
+	}
+	name := c.PostForm("name")
+	sex := c.PostForm("sex")
+	birth := c.PostForm("birth")
+	ageonset := c.PostForm("age_on_set")
+	familyID := c.PostForm("family_id")
+	individualID := c.PostForm("individual_id")
+	paternalID := c.PostForm("paternal_id")
+	maternalID := c.PostForm("maternal_id")
+	affectionStatus := c.PostForm("affection_status")
 	stmt, err := db.Prepare("UPDATE phenotypes set sex=?, birth=?, age_on_set=?, family_id=?, individual_id=?, paternal_id=?, maternal_id=?, affection_status=?  WHERE name=? ;")
 	defer stmt.Close()
+	log.Print("name", name, "sex", sex, "birth", birth, "ageonset", ageonset, "familyID", familyID, "individualID", individualID, "paternalID", paternalID, "maternalID", maternalID, "affectionStatus", affectionStatus)
 	stmt.Exec(&phenotype.Sex, &phenotype.Birth, &phenotype.Ageonset, &phenotype.FamilyID, &phenotype.IndividualID, &phenotype.PaternalID, &phenotype.MaternalID, &phenotype.AffectionStatus, &phenotype.Name)
 
 	if err != nil {

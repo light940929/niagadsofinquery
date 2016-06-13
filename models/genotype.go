@@ -27,16 +27,22 @@ type Genotype struct {
 func CreateGenotype(c *gin.Context) (*Genotype, error) {
 	db := c.MustGet("db").(*sql.DB)
 	genotype := new(Genotype)
-	genotype.Name = c.PostForm("name")
-	genotype.Chr = c.PostForm("chr")
-	genotype.Coordinate = c.PostForm("coordinate")
-	genotype.VariantID = c.PostForm("variant_id")
-	genotype.Location = c.PostForm("location")
-	genotype.Calls = c.PostForm("calls")
+	err := c.Bind(genotype)
+	if err != nil {
+		log.Print("err: ", err)
+		return genotype, nil
+	}
+	name := c.PostForm("name")
+	chr := c.PostForm("chr")
+	coordinate := c.PostForm("coordinate")
+	variantID := c.PostForm("variant_id")
+	location := c.PostForm("location")
+	calls := c.PostForm("calls")
 
 	stmt, err := db.Prepare("INSERT INTO genotypes(name,chr,coordinate,variant_id,location,calls) VALUES(?, ?, ?, ?, ?, ?);")
 	defer stmt.Close()
-	stmt.Exec(&genotype.Name, &genotype.Chr, &genotype.Coordinate, &genotype.VariantID, &genotype.Location, &genotype.Calls)
+	log.Print("name:", name, "chr", chr, "coordinate", coordinate, "variantID", variantID, "location", location, "calls", calls)
+	stmt.Exec(genotype.Name, genotype.Chr, genotype.Coordinate, genotype.VariantID, genotype.Location, genotype.Calls)
 	if err != nil {
 		log.Print("creategenotypeerr: ", err)
 		log.Print("creategenotype: ", stmt)
@@ -50,8 +56,9 @@ func CreateGenotype(c *gin.Context) (*Genotype, error) {
 func GetGenotype(c *gin.Context) (*Genotype, error) {
 
 	db := c.MustGet("db").(*sql.DB)
-	name := c.PostForm("name")
 	genotype := new(Genotype)
+	name := c.Param("name")
+	log.Print("name", name)
 	err := db.QueryRow("SELECT * FROM genotypes WHERE name=?;", name).Scan(&genotype.Id, &genotype.Name, &genotype.Chr, &genotype.Coordinate, &genotype.VariantID, &genotype.Location, &genotype.Calls)
 	log.Print("getgenotype: ", genotype)
 	if err != nil {
@@ -93,15 +100,23 @@ func ListGenotypes(c *gin.Context) ([]*Genotype, error) {
 func UpdateGenotype(c *gin.Context) (*Genotype, error) {
 	db := c.MustGet("db").(*sql.DB)
 	genotype := new(Genotype)
-	genotype.Name = c.PostForm("name")
-	genotype.Chr = c.PostForm("chr")
-	genotype.Coordinate = c.PostForm("coordinate")
-	genotype.VariantID = c.PostForm("variant_id")
-	genotype.Location = c.PostForm("location")
-	genotype.Calls = c.PostForm("calls")
-	stmt, err := db.Prepare("UPDATE datasets set chr=?, coordinate=?, variant_id=?, location=?, calls=?  WHERE name=? ;")
+	err := c.Bind(genotype)
+	if err != nil {
+		log.Print("err: ", err)
+		return genotype, nil
+	}
+	name := c.PostForm("name")
+	chr := c.PostForm("chr")
+	coordinate := c.PostForm("coordinate")
+	variantID := c.PostForm("variant_id")
+	location := c.PostForm("location")
+	calls := c.PostForm("calls")
+
+	stmt, err := db.Prepare("UPDATE genotypes set chr=?, coordinate=?, variant_id=?, location=?, calls=?  WHERE name=? ;")
 	defer stmt.Close()
-	stmt.Exec(&genotype.Chr, &genotype.Coordinate, &genotype.VariantID, &genotype.Location, &genotype.Calls, &genotype.Name)
+
+	log.Print("name", name, "chr", chr, "coordinate", coordinate, "variantID", variantID, "location", location, "calls", calls)
+	stmt.Exec(genotype.Chr, genotype.Coordinate, genotype.VariantID, genotype.Location, genotype.Calls, genotype.Name)
 
 	if err != nil {
 		log.Print("updaterr: ", err)

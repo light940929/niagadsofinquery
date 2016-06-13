@@ -96,11 +96,15 @@ func UserLogin(ctx *gin.Context) {
 		ctx.JSON(404, gin.H{"error": "error loging in"})
 		return
 	}
-	//log.Print("userpassword: ", user.Password)
-	//log.Print("userform: ", ctx.PostForm("password"))
-	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(ctx.PostForm("password")+"niagads")) != nil {
+
+	dbpassword := user.Password
+	log.Print("userpassword: ", dbpassword)
+	formpassword := ctx.PostForm("password")
+	log.Print("userform: ", formpassword)
+
+	if bcrypt.CompareHashAndPassword([]byte(dbpassword), []byte(formpassword+"niagads")) != nil {
 		log.Print("userloginAuthorized: ", err)
-		log.Print("password: ", ctx.PostForm("password"))
+		log.Print("password: ", formpassword)
 		ctx.JSON(401, gin.H{"error": "User not Authorized"})
 		return
 	}

@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -28,13 +29,23 @@ type Dataset struct {
 func CreateDataset(c *gin.Context) (*Dataset, error) {
 	db := c.MustGet("db").(*sql.DB)
 	dataset := new(Dataset)
-	dataset.Name = c.PostForm("name")
-	dataset.Description = c.PostForm("description")
-	dataset.Type = c.PostForm("type")
-
+	err := c.Bind(dataset)
+	if err != nil {
+		log.Print("err: ", err)
+		return dataset, nil
+	}
+	name := c.PostForm("name")
+	description := c.PostForm("description")
+	types := c.PostForm("type")
+	log.Print("dataset: ", dataset)
 	stmt, err := db.Prepare("INSERT INTO datasets(name,description,type) VALUES(?, ?, ?);")
 	defer stmt.Close()
-	stmt.Exec(&dataset.Name, &dataset.Description, &dataset.Type)
+	log.Print("datasetname: ", name, "datasetde: ", description, "datasetype: ", types)
+	if name == "  " {
+		fmt.Print("Please input the name of datasets")
+	}
+
+	stmt.Exec(dataset.Name, dataset.Description, dataset.Type)
 	if err != nil {
 		log.Print("createdataseterr: ", err)
 		log.Print("createdataset: ", stmt)
@@ -48,7 +59,7 @@ func CreateDataset(c *gin.Context) (*Dataset, error) {
 func GetDataset(c *gin.Context) (*Dataset, error) {
 
 	db := c.MustGet("db").(*sql.DB)
-	name := c.PostForm("name")
+	name := c.Param("name")
 	dataset := new(Dataset)
 	err := db.QueryRow("SELECT * FROM datasets WHERE name=?;", name).Scan(&dataset.Id, &dataset.Name, &dataset.Description, &dataset.Type, &dataset.Created)
 	log.Print("getdataset: ", dataset)
@@ -121,13 +132,13 @@ func DeleteDataset(c *gin.Context) (bool, error) {
 
 /*
 CREATE TABLE `datasets` (
-	`id` BIGINT NOT NULL AUTO_INCREMENT,
+	`did` BIGINT NOT NULL AUTO_INCREMENT,
 	`name` char(50) NOT NULL,
 	`description` varchar(255) NOT NULL,
 	`type` char(200) NOT NULL,
 	`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	unique(`name`),
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`did`)
 );
 
 */
