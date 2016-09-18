@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -170,7 +171,41 @@ func InquerysetAdd(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Internal error"})
 		return
 	}
-	c.JSON(201, gin.H{"success": inqueryset})
+	//c.JSON(201, gin.H{"success": inqueryset})
+	//
+	log.Print("id: ", inqueryset.Id)
+	//c.JSON(201, gin.H{"success": "please wait project " + inqueryset.Id})
+	// apiposfile := "putapipos.sh"
+	// path, err := filepath.Abs("")
+	// if err != nil {
+	// 	fmt.Println("Error locating absulte file paths")
+	// 	os.Exit(1)
+	// }
+	// folderPath := filepath.Join(path, apiposfile)
+	// cd := exec.Command("cd", folderPath)
+	// log.Print("cd :", cd)
+	cmd := exec.Command("/bin/sh", "-c", "cd /Users/hannahlin/Documents/workspace/Go/src/github.com/user/niagadsofinquery ; ./putapipos.sh "+inqueryset.Id)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Println(cmd.Run())
+	c.JSON(201, gin.H{"success": "please wait project " + inqueryset.Id})
+
+}
+
+func GenotypematrixAdd(c *gin.Context) {
+
+	genotypematrix, err := models.CreateGenotypematrix(c)
+	if err != nil {
+		log.Print("genotypematrix: ", genotypematrix)
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	//c.JSON(201, gin.H{"success": genotypematrix})
+	cmd := exec.Command("putapirsid.sh " + genotypematrix.Id)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Println(cmd.Run())
+	c.JSON(201, gin.H{"success": "please wait project " + genotypematrix.Id})
 
 }
 
@@ -185,17 +220,18 @@ func PhenotypeAdd(c *gin.Context) {
 	c.JSON(201, gin.H{"success": phenotype})
 
 }
-func GenotypeAdd(c *gin.Context) {
 
-	genotype, err := models.CreateGenotype(c)
-	if err != nil {
-		log.Print("genotype: ", genotype)
-		c.JSON(500, gin.H{"error": "Internal error"})
-		return
-	}
-	c.JSON(201, gin.H{"success": genotype})
-
-}
+// func GenotypeAdd(c *gin.Context) {
+//
+// 	genotype, err := models.CreateGenotype(c)
+// 	if err != nil {
+// 		log.Print("genotype: ", genotype)
+// 		c.JSON(500, gin.H{"error": "Internal error"})
+// 		return
+// 	}
+// 	c.JSON(201, gin.H{"success": genotype})
+//
+// }
 
 func DatasetsGet(c *gin.Context) {
 	datasets, err := models.ListDatasets(c)
@@ -215,6 +251,17 @@ func InquerysetsGet(c *gin.Context) {
 	c.JSON(200, gin.H{"success": inquerysets})
 
 }
+
+func GenotypematrixsGet(c *gin.Context) {
+	genotypematrixs, err := models.ListGenotypematrixs(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error", "message": err})
+		return
+	}
+	c.JSON(200, gin.H{"success": genotypematrixs})
+
+}
+
 func PhenotypesGet(c *gin.Context) {
 	phenotypes, err := models.ListPhenotypes(c)
 	if err != nil {
@@ -224,15 +271,16 @@ func PhenotypesGet(c *gin.Context) {
 	c.JSON(200, gin.H{"success": phenotypes})
 
 }
-func GenotypesGet(c *gin.Context) {
-	genotypes, err := models.ListGenotypes(c)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal error", "message": err})
-		return
-	}
-	c.JSON(200, gin.H{"success": genotypes})
 
-}
+// func GenotypesGet(c *gin.Context) {
+// 	genotypes, err := models.ListGenotypes(c)
+// 	if err != nil {
+// 		c.JSON(500, gin.H{"error": "Internal error", "message": err})
+// 		return
+// 	}
+// 	c.JSON(200, gin.H{"success": genotypes})
+//
+// }
 
 func DatasetGet(c *gin.Context) {
 	dataset, err := models.GetDataset(c)
@@ -253,6 +301,17 @@ func InquerysetGet(c *gin.Context) {
 	c.JSON(200, gin.H{"success": inqueryset})
 
 }
+
+func GenotypematrixGet(c *gin.Context) {
+	genotypematrix, err := models.GetGenotypematrix(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(200, gin.H{"success": genotypematrix})
+
+}
+
 func PhenotypeGet(c *gin.Context) {
 	phenotype, err := models.GetPhenotype(c)
 	if err != nil {
@@ -262,15 +321,16 @@ func PhenotypeGet(c *gin.Context) {
 	c.JSON(200, gin.H{"success": phenotype})
 
 }
-func GenotypeGet(c *gin.Context) {
-	genotype, err := models.GetGenotype(c)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal error"})
-		return
-	}
-	c.JSON(200, gin.H{"success": genotype})
 
-}
+// func GenotypeGet(c *gin.Context) {
+// 	genotype, err := models.GetGenotype(c)
+// 	if err != nil {
+// 		c.JSON(500, gin.H{"error": "Internal error"})
+// 		return
+// 	}
+// 	c.JSON(200, gin.H{"success": genotype})
+//
+// }
 
 func DatasetUpdate(c *gin.Context) {
 	dataset, err := models.UpdateDataset(c)
@@ -292,6 +352,16 @@ func InquerysetUpdate(c *gin.Context) {
 
 }
 
+func GenotypematrixUpdate(c *gin.Context) {
+	genotypematrix, err := models.UpdateGenotypematrix(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	c.JSON(201, gin.H{"success": genotypematrix})
+
+}
+
 func PhenotypeUpdate(c *gin.Context) {
 	phenotype, err := models.UpdatePhenotype(c)
 	if err != nil {
@@ -301,15 +371,16 @@ func PhenotypeUpdate(c *gin.Context) {
 	c.JSON(201, gin.H{"success": phenotype})
 
 }
-func GenotypeUpdate(c *gin.Context) {
-	genotype, err := models.UpdateGenotype(c)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal error"})
-		return
-	}
-	c.JSON(201, gin.H{"success": genotype})
 
-}
+// func GenotypeUpdate(c *gin.Context) {
+// 	genotype, err := models.UpdateGenotype(c)
+// 	if err != nil {
+// 		c.JSON(500, gin.H{"error": "Internal error"})
+// 		return
+// 	}
+// 	c.JSON(201, gin.H{"success": genotype})
+//
+// }
 
 func DatasetRemove(c *gin.Context) {
 	dataset, err := models.DeleteDataset(c)
@@ -332,6 +403,18 @@ func InquerysetRemove(c *gin.Context) {
 	c.JSON(200, gin.H{"success": "inqueryset removed"})
 
 }
+
+func GenotypematrixRemove(c *gin.Context) {
+	genotypematrix, err := models.DeleteGenotypematrix(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal error"})
+		return
+	}
+	log.Print("genotypematrixRemove", genotypematrix)
+	c.JSON(200, gin.H{"success": "genotypematrix removed"})
+
+}
+
 func PhenotypeRemove(c *gin.Context) {
 	phenotype, err := models.DeletePhenotype(c)
 	if err != nil {
@@ -342,16 +425,17 @@ func PhenotypeRemove(c *gin.Context) {
 	c.JSON(200, gin.H{"success": "phenotype removed"})
 
 }
-func GenotypeRemove(c *gin.Context) {
-	genotype, err := models.DeleteGenotype(c)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal error"})
-		return
-	}
-	log.Print("genotypeRemove", genotype)
-	c.JSON(200, gin.H{"success": "genotype removed"})
 
-}
+// func GenotypeRemove(c *gin.Context) {
+// 	genotype, err := models.DeleteGenotype(c)
+// 	if err != nil {
+// 		c.JSON(500, gin.H{"error": "Internal error"})
+// 		return
+// 	}
+// 	log.Print("genotypeRemove", genotype)
+// 	c.JSON(200, gin.H{"success": "genotype removed"})
+//
+// }
 
 func main() {
 
@@ -408,32 +492,39 @@ func main() {
 	private.DELETE("/users/:email", UserRemove)
 
 	//datasets
-	private.GET("/datasets", DatasetsGet)
-	private.POST("/datasets", DatasetAdd)
-	private.GET("/datasets/:name", DatasetGet)
-	private.PUT("/datasets/:name", DatasetUpdate)
-	private.DELETE("/datasets/:name", DatasetRemove)
+	//private.GET("/datasets", DatasetsGet)
+	//private.POST("/datasets", DatasetAdd)
+	//private.GET("/datasets/:name", DatasetGet)
+	//private.PUT("/datasets/:name", DatasetUpdate)
+	//private.DELETE("/datasets/:name", DatasetRemove)
 
 	//inquerysets
-	private.GET("/inqueries", InquerysetsGet)
-	private.POST("/inqueries", InquerysetAdd)
-	private.GET("/inqueries/:name", InquerysetGet)
-	private.PUT("/inqueries/:name", InquerysetUpdate)
-	private.DELETE("/inqueries/:name", InquerysetRemove)
+	private.GET("/genotypebypositions", InquerysetsGet)
+	private.POST("/genotypebypositions", InquerysetAdd)
+	private.GET("/genotypebypositions/:id", InquerysetGet)
+	private.PUT("/genotypebypositions/:id", InquerysetUpdate)
+	private.DELETE("/genotypebypositions/:id", InquerysetRemove)
+
+	//genotypematrixs
+	private.GET("/genotypebyrsids", GenotypematrixsGet)
+	private.POST("/genotypebyrsids", GenotypematrixAdd)
+	private.GET("/genotypebyrsids/:id", GenotypematrixGet)
+	private.PUT("/genotypebyrsids/:id", GenotypematrixUpdate)
+	private.DELETE("/genotypebyrsids/:id", GenotypematrixRemove)
 
 	// phenotypes
-	private.GET("/phenotypes", PhenotypesGet)
-	private.POST("/phenotypes", PhenotypeAdd)
-	private.GET("/phenotypes/:name", PhenotypeGet)
-	private.PUT("/phenotypes/:name", PhenotypeUpdate)
-	private.DELETE("/phenotypes/:name", PhenotypeRemove)
+	//private.GET("/phenotypes", PhenotypesGet)
+	//private.POST("/phenotypes", PhenotypeAdd)
+	//private.GET("/phenotypes/:name", PhenotypeGet)
+	//private.PUT("/phenotypes/:name", PhenotypeUpdate)
+	//private.DELETE("/phenotypes/:name", PhenotypeRemove)
 
 	// genotypes
-	private.GET("/genotypes", GenotypesGet)
-	private.POST("/genotypes", GenotypeAdd)
-	private.GET("/genotypes/:name", GenotypeGet)
-	private.PUT("/genotypes/:name", GenotypeUpdate)
-	private.DELETE("/genotypes/:name", GenotypeRemove)
+	//private.GET("/genotypes", GenotypesGet)
+	//private.POST("/genotypes", GenotypeAdd)
+	//private.GET("/genotypes/:individual_id", GenotypeGet)
+	//private.PUT("/genotypes/:individual_id", GenotypeUpdate)
+	//private.DELETE("/genotypes/:individual_id", GenotypeRemove)
 
 	// Start listening
 	port := Port

@@ -2,11 +2,10 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -14,7 +13,6 @@ import (
 //type A string //check for id type
 
 type tped struct {
-	Title      string `json:"title"`
 	Chr        string `json:"chr"`
 	VariantID  string `json:"variant_id"`
 	Location   string `json:"location"`
@@ -23,7 +21,6 @@ type tped struct {
 }
 
 type tfam struct {
-	Title           string `json:"title"`
 	FamilyID        string `json:"family_id"`
 	IndividualID    string `json:"individual_id"`
 	PaternalID      string `json:"paternal_id"`
@@ -34,8 +31,8 @@ type tfam struct {
 
 func main() {
 	//tpedfile, err := os.Open("snpID.txt") only id
-	tpedfile, err := os.Open("test.tped")
-	tfamfile, err := os.Open("test.tfam")
+	tpedfile, err := os.Open("example.merged.tped")
+	tfamfile, err := os.Open("example.merged.tfam")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -67,7 +64,6 @@ func main() {
 		fmt.Printf("%q\n", call)
 
 		tpeds := &tped{
-			Title:      "cbd",
 			Chr:        chr,
 			VariantID:  variantID,
 			Location:   "0",
@@ -79,18 +75,18 @@ func main() {
 		}
 		fmt.Println(string(out))
 
-		url := "http://localhost:9000/api/genotypes"
-		var jsonStr = []byte(out)
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNDMxNDl9.M1K4fiH-jKoT-flBbla79A4q4aSM9qVOp3Q7xMtVe_8")
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-		fmt.Println("response Status:", resp.Status)
+		// url := "http://localhost:9000/api/genotypes"
+		// var jsonStr = []byte(out)
+		// req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		// req.Header.Set("Content-Type", "application/json")
+		// req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNDMxNDl9.M1K4fiH-jKoT-flBbla79A4q4aSM9qVOp3Q7xMtVe_8")
+		// client := &http.Client{}
+		// resp, err := client.Do(req)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// defer resp.Body.Close()
+		// fmt.Println("response Status:", resp.Status)
 	}
 	//{"title":"cbd","family_id":"2","individual_id":"1","paternal_id":"0","maternal_id":"0","sex":"unknown","affection_status":"1"}
 	for individualrd.Scan() {
@@ -99,7 +95,9 @@ func main() {
 		familyID1 := regfamilyID.FindString(line)
 		familyID := strings.Trim(familyID1, " ")
 		fmt.Printf("%q\n", familyID)
-
+		command := "awk '{print $2}' ./example.merged.tped | awk '{for(i=1;i<=NF;i=i+1){a[NR,i]=$i}}END{for(j=1;j<=NF;j++){str=a[1,j];for(i=2;i<=NR;i++){str=str ", "  a[i,j]}print str}}'"
+		individualID := exec.Command("sh", command).Output()
+		fmt.Printf("%q\n", individualID)
 		// regindividualID := regexp.MustCompile(` \d`)
 		// individualID := regindividualID.FindString(line)
 		// fmt.Printf("%q\n", individualID)
@@ -110,30 +108,29 @@ func main() {
 		fmt.Printf("%q\n", status)
 
 		tfams := &tfam{
-			Title:           "cbd",
 			FamilyID:        familyID,
-			IndividualID:    "1",
+			IndividualID:    individualID,
 			PaternalID:      "0",
 			MaternalID:      "0",
-			Sex:             "unknown",
+			Sex:             "0",
 			AffectionStatus: status}
 		out, err := json.Marshal(tfams)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Println(string(out))
-		url := "http://localhost:9000/api/phenotypes"
-		var jsonStr = []byte(out)
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNDMxNDl9.M1K4fiH-jKoT-flBbla79A4q4aSM9qVOp3Q7xMtVe_8")
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-		fmt.Println("response Status:", resp.Status)
+		// url := "http://localhost:9000/api/phenotypes"
+		// var jsonStr = []byte(out)
+		// req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		// req.Header.Set("Content-Type", "application/json")
+		// req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6Ik5JQUdBRFMiLCJleHAiOjE0NjEzNDMxNDl9.M1K4fiH-jKoT-flBbla79A4q4aSM9qVOp3Q7xMtVe_8")
+		// client := &http.Client{}
+		// resp, err := client.Do(req)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// defer resp.Body.Close()
+		// fmt.Println("response Status:", resp.Status)
 	}
 
 }
